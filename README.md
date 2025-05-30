@@ -1,6 +1,3 @@
-
-![app_icon](https://github.com/user-attachments/assets/54f63aa6-4e20-46cd-b5c3-df36c66ac6b9)
-
 # ChatterbOx
 
 
