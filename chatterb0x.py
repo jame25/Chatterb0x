@@ -17,6 +17,7 @@ import re
 import os
 import time
 import logging
+import urllib.parse
 
 # Configure logging
 logging.basicConfig(
@@ -414,6 +415,17 @@ class ClipboardReader(QObject):
             # Store the current clipboard text
             self.current_clipboard_text = ""
             
+            # URL and file path patterns
+            self.url_pattern = re.compile(
+                r'^(file:///|https?://)?'  # file:/// or http:// or https://
+                r'([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+'  # domain
+                r'[a-zA-Z]{2,}'  # TLD
+                r'(/[^\s]*)?$'  # path
+            )
+            self.file_path_pattern = re.compile(
+                r'^[a-zA-Z]:\\|^/|^\\\\|^file:///'  # Windows drive, Unix root, network path, or file:// URL
+            )
+
             logger.debug("Creating system tray icon")
             self.tray = QSystemTrayIcon()
             
@@ -990,6 +1002,39 @@ class ClipboardReader(QObject):
         except Exception as e:
             logger.error(f"Error in clipboard change handler: {e}", exc_info=True)
 
+    def is_valid_text(self, text):
+        """Check if the text is valid for reading (not a URL or file path)"""
+        try:
+            if not text or not text.strip():
+                return False
+                
+            text = text.strip()
+            
+            # Check if it's a URL
+            if self.url_pattern.match(text):
+                logger.debug(f"Text is a URL: {text}")
+                return False
+                
+            # Check if it's a file path
+            if self.file_path_pattern.match(text):
+                logger.debug(f"Text is a file path: {text}")
+                return False
+                
+            # Check if it's a valid URL when parsed
+            try:
+                result = urllib.parse.urlparse(text)
+                if result.scheme in ['http', 'https', 'file']:
+                    logger.debug(f"Text is a valid URL with scheme {result.scheme}: {text}")
+                    return False
+            except:
+                pass
+                
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error checking text validity: {e}", exc_info=True)
+            return False
+
     def _process_clipboard_change(self):
         """Process clipboard change"""
         try:
@@ -1010,16 +1055,20 @@ class ClipboardReader(QObject):
                 text = mime_data.text()
                 logger.debug(f"New clipboard text: {repr(text)}")
                 if text and text.strip():
-                    # Store the text
-                    self.current_clipboard_text = text
-                    self.last_clipboard_text = text
-                    logger.debug(f"Stored clipboard text: {repr(self.current_clipboard_text)}")
-                    # Only auto-read if auto-read mode is enabled
-                    if self.auto_read_action.isChecked():
-                        if not self.is_reading:
-                            self.read_clipboard(text=text)  # Pass the actual text
-                        else:
-                            self.pending_read = text
+                    # Check if the text is valid for reading
+                    if self.is_valid_text(text):
+                        # Store the text
+                        self.current_clipboard_text = text
+                        self.last_clipboard_text = text
+                        logger.debug(f"Stored clipboard text: {repr(self.current_clipboard_text)}")
+                        # Only auto-read if auto-read mode is enabled
+                        if self.auto_read_action.isChecked():
+                            if not self.is_reading:
+                                self.read_clipboard(text=text)  # Pass the actual text
+                            else:
+                                self.pending_read = text
+                    else:
+                        logger.debug("Text is a URL or file path, skipping")
             else:
                 logger.debug("Clipboard content is not text")
                 
