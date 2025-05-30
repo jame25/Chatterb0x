@@ -120,11 +120,11 @@ class AudioPlayer(QThread):
                 pass
             self.stream = None
 
-            self.stream = self.p.open(
-                format=pyaudio.paFloat32,
-                channels=1,
-                rate=self.base_sample_rate,
-                output=True,
+        self.stream = self.p.open(
+            format=pyaudio.paFloat32,
+            channels=1,
+            rate=self.base_sample_rate,
+            output=True,
             frames_per_buffer=self.CHUNK_SIZE,
             stream_callback=None,
             start=False
@@ -174,7 +174,7 @@ class AudioPlayer(QThread):
     def stop_stream(self):
         """Stop the audio stream without closing it"""
         print("AudioPlayer: Stopping stream...")  # Debug log
-            if self.stream:
+        if self.stream:
             try:
                 self.stream.stop_stream()
             except:
@@ -279,7 +279,7 @@ class SaveToWavThread(QThread):
             self.save_thread = SaveToWavThread(self.model, text, file_path, voice_prompt)
             self.save_thread.finished.connect(self.on_save_finished)
             self.save_thread.error.connect(self.on_save_error)
-            
+        
             # Keep a reference to the thread
             self._save_thread_ref = self.save_thread
             
@@ -411,86 +411,86 @@ class ClipboardReader(QObject):
             
             # Use the new icon file
             icon = QIcon("app_icon.png")
-        self.tray.setIcon(icon)
-        self.tray.setVisible(True)
-        
+            self.tray.setIcon(icon)
+            self.tray.setVisible(True)
+            
             # Keep the tray icon reference
             self._tray_reference = self.tray
             
             logger.debug("Creating main menu")
-        self.menu = QMenu()
-        
-        # Create read action
-        read_action = QAction("Read Clipboard", self.menu)
-        read_action.triggered.connect(self.read_clipboard)
-        self.menu.addAction(read_action)
-        
-        # Create save to WAV action
-        save_action = QAction("Save to WAV", self.menu)
-        save_action.triggered.connect(self.save_to_wav)
-        self.menu.addAction(save_action)
-        
-        # Create stop action
-        stop_action = QAction("Stop Reading", self.menu)
-        stop_action.triggered.connect(self.stop_reading)
-        self.menu.addAction(stop_action)
-        
-        self.menu.addSeparator()
-        
-            logger.debug("Setting up voice menu")
-        self.voice_menu = QMenu("Voice", self.menu)
-            self.current_voice = "female"
-        self.voice_prompts_dir = Path("voice_prompts")
-        self.voice_prompts = {
-            "male": self.voice_prompts_dir / "male_voice.wav",
-            "female": self.voice_prompts_dir / "female_voice.wav"
-        }
-        
-            logger.debug("Creating voice prompts directory")
-        self.voice_prompts_dir.mkdir(exist_ok=True)
-        
-            logger.debug("Initializing TTS model")
-        self.initialize_model()
-        
-        if not self.voice_prompts["female"].exists():
-                logger.debug("Creating female voice prompt")
-            self.create_female_voice_prompt()
-        if not self.voice_prompts["male"].exists():
-                logger.debug("Creating male voice prompt")
-            self.create_male_voice_prompt()
+            self.menu = QMenu()
             
-        male_voice = QAction("Male Voice", self.voice_menu)
-        male_voice.triggered.connect(lambda: self.set_voice("male"))
-        self.voice_menu.addAction(male_voice)
-        
-        female_voice = QAction("Female Voice", self.voice_menu)
-        female_voice.triggered.connect(lambda: self.set_voice("female"))
-        self.voice_menu.addAction(female_voice)
-        
-        self.menu.addMenu(self.voice_menu)
-        self.menu.addSeparator()
-        
+            # Create read action
+            read_action = QAction("Read Clipboard", self.menu)
+            read_action.triggered.connect(self.read_clipboard)
+            self.menu.addAction(read_action)
+            
+            # Create save to WAV action
+            save_action = QAction("Save to WAV", self.menu)
+            save_action.triggered.connect(self.save_to_wav)
+            self.menu.addAction(save_action)
+            
+            # Create stop action
+            stop_action = QAction("Stop Reading", self.menu)
+            stop_action.triggered.connect(self.stop_reading)
+            self.menu.addAction(stop_action)
+            
+            self.menu.addSeparator()
+            
+            logger.debug("Setting up voice menu")
+            self.voice_menu = QMenu("Voice", self.menu)
+            self.current_voice = "female"
+            self.voice_prompts_dir = Path("voice_prompts")
+            self.voice_prompts = {
+                "male": self.voice_prompts_dir / "male_voice.wav",
+                "female": self.voice_prompts_dir / "female_voice.wav"
+            }
+            
+            logger.debug("Creating voice prompts directory")
+            self.voice_prompts_dir.mkdir(exist_ok=True)
+            
+            logger.debug("Initializing TTS model")
+            self.initialize_model()
+            
+            if not self.voice_prompts["female"].exists():
+                logger.debug("Creating female voice prompt")
+                self.create_female_voice_prompt()
+            if not self.voice_prompts["male"].exists():
+                logger.debug("Creating male voice prompt")
+                self.create_male_voice_prompt()
+                
+            male_voice = QAction("Male Voice", self.voice_menu)
+            male_voice.triggered.connect(lambda: self.set_voice("male"))
+            self.voice_menu.addAction(male_voice)
+            
+            female_voice = QAction("Female Voice", self.voice_menu)
+            female_voice.triggered.connect(lambda: self.set_voice("female"))
+            self.voice_menu.addAction(female_voice)
+            
+            self.menu.addMenu(self.voice_menu)
+            self.menu.addSeparator()
+            
             logger.debug("Setting up auto-read toggle")
-        self.auto_read_action = QAction("Auto-Read Clipboard", self.menu)
-        self.auto_read_action.setCheckable(True)
-        self.auto_read_action.setChecked(False)
-        self.auto_read_action.triggered.connect(self.toggle_auto_read)
-        self.menu.addAction(self.auto_read_action)
-        
-        self.menu.addSeparator()
-        
-        quit_action = QAction("Quit", self.menu)
-        quit_action.triggered.connect(self.app.quit)
-        self.menu.addAction(quit_action)
-        
-        self.tray.setContextMenu(self.menu)
-        
+            self.auto_read_action = QAction("Auto-Read Clipboard", self.menu)
+            self.auto_read_action.setCheckable(True)
+            self.auto_read_action.setChecked(False)
+            self.auto_read_action.triggered.connect(self.toggle_auto_read)
+            self.menu.addAction(self.auto_read_action)
+            
+            self.menu.addSeparator()
+            
+            quit_action = QAction("Quit", self.menu)
+            quit_action.triggered.connect(self.app.quit)
+            self.menu.addAction(quit_action)
+            
+            self.tray.setContextMenu(self.menu)
+            
             logger.debug("Initializing queues and threads")
-        self.text_queue = queue.Queue()
-        self.audio_queue = queue.Queue()
-        self.generator = None
-        self.player = None
-        
+            self.text_queue = queue.Queue()
+            self.audio_queue = queue.Queue()
+            self.generator = None
+            self.player = None
+            
             logger.debug("Initializing clipboard monitoring")
             self.last_clipboard_text = ""
             try:
@@ -501,12 +501,12 @@ class ClipboardReader(QObject):
                     logger.debug(f"Initial clipboard content: {repr(self.last_clipboard_text)}")
             except Exception as e:
                 logger.error(f"Error initializing clipboard: {e}", exc_info=True)
+                
+            self.clipboard_timer = QTimer()
+            self.clipboard_timer.timeout.connect(self.check_clipboard)
             
-        self.clipboard_timer = QTimer()
-        self.clipboard_timer.timeout.connect(self.check_clipboard)
-        
-        self.is_reading = False
-        self.pending_read = None
+            self.is_reading = False
+            self.pending_read = None
             
             logger.debug("ClipboardReader initialization complete")
             
@@ -622,14 +622,14 @@ class ClipboardReader(QObject):
         """Toggle automatic clipboard reading"""
         try:
             logger.debug(f"Toggling auto-read: {checked}")
-        if checked:
-            # Update last clipboard text to current content to avoid immediate read
+            if checked:
+                # Update last clipboard text to current content to avoid immediate read
                 current_text = self.get_clipboard_text()
                 if current_text:
                     self.last_clipboard_text = current_text
-            self.clipboard_timer.start(500)
+                self.clipboard_timer.start(500)
                 logger.debug("Auto-read enabled")
-        else:
+            else:
                 self.clipboard_timer.stop()
                 logger.debug("Auto-read disabled")
         except Exception as e:
@@ -712,9 +712,9 @@ class ClipboardReader(QObject):
                     text = None
                 
             if not text:
-                    logger.warning("No text in clipboard")
-                    QMessageBox.warning(None, "Warning", "No text found in clipboard. Please copy some text first.")
-                    return
+                logger.warning("No text in clipboard")
+                QMessageBox.warning(None, "Warning", "No text found in clipboard. Please copy some text first.")
+                return
 
             # Ensure text is a string
             if not isinstance(text, str):
@@ -739,12 +739,12 @@ class ClipboardReader(QObject):
             
             try:
                 logger.debug("Stopping previous reading")
-            self.stop_reading()
+                self.stop_reading()
             except Exception as e:
                 logger.error(f"Error stopping previous reading: {e}", exc_info=True)
             
             try:
-            chunks = self.split_text(text)
+                chunks = self.split_text(text)
                 logger.debug(f"Split text into {len(chunks)} chunks")
             except Exception as e:
                 logger.error(f"Error splitting text: {e}", exc_info=True)
@@ -752,7 +752,7 @@ class ClipboardReader(QObject):
                 return
             
             try:
-            voice_prompt = str(self.voice_prompts.get(self.current_voice)) if self.current_voice else None
+                voice_prompt = str(self.voice_prompts.get(self.current_voice)) if self.current_voice else None
                 logger.debug(f"Using voice prompt: {voice_prompt}")
             except Exception as e:
                 logger.error(f"Error getting voice prompt: {e}", exc_info=True)
@@ -760,8 +760,8 @@ class ClipboardReader(QObject):
             
             try:
                 logger.debug("Creating new AudioGenerator and AudioPlayer")
-            self.generator = AudioGenerator(self.model, self.text_queue, voice_prompt)
-            self.player = AudioPlayer(self.audio_queue, self.model.sr)
+                self.generator = AudioGenerator(self.model, self.text_queue, voice_prompt)
+                self.player = AudioPlayer(self.audio_queue, self.model.sr)
             except Exception as e:
                 logger.error(f"Error creating audio components: {e}", exc_info=True)
                 self.is_reading = False
@@ -769,11 +769,11 @@ class ClipboardReader(QObject):
             
             try:
                 logger.debug("Connecting signals")
-            self.generator.audio_ready.connect(lambda audio: self.audio_queue.put(audio))
-            self.generator.error.connect(self.on_generation_error)
-            self.player.error.connect(self.on_playback_error)
-            self.generator.finished.connect(self.on_reading_finished)
-            self.player.finished.connect(self.on_playback_finished)
+                self.generator.audio_ready.connect(lambda audio: self.audio_queue.put(audio))
+                self.generator.error.connect(self.on_generation_error)
+                self.player.error.connect(self.on_playback_error)
+                self.generator.finished.connect(self.on_reading_finished)
+                self.player.finished.connect(self.on_playback_finished)
             except Exception as e:
                 logger.error(f"Error connecting signals: {e}", exc_info=True)
                 self.is_reading = False
@@ -781,8 +781,8 @@ class ClipboardReader(QObject):
             
             try:
                 logger.debug("Starting generator and player threads")
-            self.generator.start(QThread.HighPriority)
-            self.player.start(QThread.HighPriority)
+                self.generator.start(QThread.HighPriority)
+                self.player.start(QThread.HighPriority)
             except Exception as e:
                 logger.error(f"Error starting threads: {e}", exc_info=True)
                 self.is_reading = False
@@ -790,9 +790,9 @@ class ClipboardReader(QObject):
             
             try:
                 logger.debug("Adding text chunks to queue")
-            for chunk in chunks:
+                for chunk in chunks:
                     logger.debug(f"Adding chunk to queue: {chunk[:50]}...")
-                self.text_queue.put(chunk)
+                    self.text_queue.put(chunk)
                 self.text_queue.put(None)
                 logger.debug("Finished adding chunks to queue")
             except Exception as e:
@@ -825,17 +825,17 @@ class ClipboardReader(QObject):
         """Clear both text and audio queues"""
         try:
             logger.debug("Clearing queues")
-        while not self.text_queue.empty():
-            try:
+            while not self.text_queue.empty():
+                try:
                     item = self.text_queue.get_nowait()
                     logger.debug(f"Cleared text queue item: {str(item)[:50] if item else 'None'}")
-            except queue.Empty:
-                break
-        while not self.audio_queue.empty():
-            try:
-                self.audio_queue.get_nowait()
-            except queue.Empty:
-                break
+                except queue.Empty:
+                    break
+            while not self.audio_queue.empty():
+                try:
+                    self.audio_queue.get_nowait()
+                except queue.Empty:
+                    break
             logger.debug("Queues cleared")
         except Exception as e:
             logger.error(f"Error clearing queues: {e}", exc_info=True)
@@ -900,7 +900,7 @@ class ClipboardReader(QObject):
         else:
             # Only update last clipboard text if there's no pending read
             # This prevents re-reading the same content
-        self.last_clipboard_text = pyperclip.paste()
+            self.last_clipboard_text = pyperclip.paste()
     
     def save_to_wav(self):
         """Save clipboard text as a WAV file"""
@@ -908,10 +908,10 @@ class ClipboardReader(QObject):
         try:
             text = self.get_clipboard_text()
             logger.debug(f"Got clipboard text: {text[:50]}...")
-        if not text:
+            if not text:
                 logger.warning("Clipboard is empty")
-            QMessageBox.warning(None, "Warning", "Clipboard is empty!")
-            return
+                QMessageBox.warning(None, "Warning", "Clipboard is empty!")
+                return
             
             # Get the current voice prompt
             voice_prompt = str(self.voice_prompts.get(self.current_voice)) if self.current_voice else None
