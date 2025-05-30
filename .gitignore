@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDE / Editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.egg
+*.whl
+
+# Test artifacts / Coverage
+.pytest_cache/
+coverage.xml
+htmlcov/
+.coverage
+*.cover
+
+# Audio files (generated outputs and potentially user inputs you don't want to track)
+*.wav
+*.mp3
+*.flac
+
+
+# Output directory for generated files
+chatterbox_outputs/
+
+# Test scripts matching the pattern 'test*.py'
+test*.py
+# Temporary files
+*.tmp
+# PyInstaller (if you ever use it for packaging)
+# *.spec
+
+# Log files
+*.log
+logs/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
