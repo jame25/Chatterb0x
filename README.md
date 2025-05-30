@@ -17,4 +17,4 @@ This is a tray utility that supports Chatterbox Text-to-Speech (TTS). It can aut
 *   Python 3.x
 *   Required Python packages: `PyQt5`, `pyperclip`, `torch`, `torchaudio`, `pyaudio`, `chatterbox-tts` (or equivalent TTS library), `numpy`, `pathlib`, `queue`, `re`, `os`, `time`, `logging`.
 *   Voice prompt audio files (`male_voice.wav`, `female_voice.wav`) in a `voice_prompts` directory (the application will attempt to create these if they don't exist, but can include your own short (30s) voice samples).
-*   A system tray icon file named `app_icon.png` in the application directory.
+*   The system tray icon file named `app_icon.png` in the application directory.
