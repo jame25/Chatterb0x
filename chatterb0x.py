@@ -29,13 +29,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Patch torch.load to always use CPU
-original_torch_load = torch.load
-@functools.wraps(original_torch_load)
-def patched_torch_load(*args, **kwargs):
-    kwargs['map_location'] = torch.device('cpu')
-    return original_torch_load(*args, **kwargs)
-
 class AudioGenerator(QThread):
     audio_ready = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
@@ -50,6 +43,7 @@ class AudioGenerator(QThread):
         self.is_running = True
         self.buffer_size = 5
         self.processing = False
+        self.parent = None  # Reference to ClipboardReader for progress updates
 
     def run(self):
         try:
@@ -64,11 +58,25 @@ class AudioGenerator(QThread):
                     logger.debug(f"AudioGenerator: Processing text chunk: {text[:50]}...")
                     self.processing = True
                     
+                    # Show progress in tray icon tooltip
+                    if hasattr(self, 'parent') and hasattr(self.parent, 'tray'):
+                        self.parent.tray.setToolTip(f"Generating audio: {text[:30]}...")
+                    
                     if self.voice_prompt:
                         logger.debug(f"AudioGenerator: Using voice prompt: {self.voice_prompt}")
-                        wav = self.model.generate(text, audio_prompt_path=self.voice_prompt)
+                        # Use optimized parameters for faster generation
+                        wav = self.model.generate(
+                            text, 
+                            audio_prompt_path=self.voice_prompt,
+                            temperature=0.7,  # Lower temperature for faster, more deterministic generation
+                            cfg_weight=0.3,   # Lower CFG weight for faster generation
+                        )
                     else:
-                        wav = self.model.generate(text)
+                        wav = self.model.generate(
+                            text,
+                            temperature=0.7,
+                            cfg_weight=0.3,
+                        )
                     
                     audio_data = wav.numpy().astype(np.float32)
                     logger.debug(f"AudioGenerator: Generated audio data of length {len(audio_data)}")
@@ -546,28 +554,25 @@ class ClipboardReader(QObject):
     def initialize_model(self):
         try:
             print("Initializing TTS model...")
-            if torch.cuda.is_available():
-                print("CUDA is available, using GPU")
-                self.model = ChatterboxTTS.from_pretrained(device="cuda")
-            else:
-                print("CUDA is not available, using CPU")
-                # Temporarily patch torch.load
-                torch.load = patched_torch_load
-                try:
-                    self.model = ChatterboxTTS.from_pretrained(device="cpu")
-                finally:
-                    # Restore original torch.load
-                    torch.load = original_torch_load
-                
-                # Show warning about CPU usage
-                QMessageBox.warning(None, "GPU Not Available",
-                                  "CUDA is not available. The application will run on CPU, which may be slower.\n\n"
-                                  "To enable GPU acceleration:\n"
-                                  "1. Install NVIDIA GPU drivers\n"
-                                  "2. Install CUDA Toolkit\n"
-                                  "3. Install cuDNN\n"
-                                  "4. Reinstall PyTorch with CUDA support")
-            print("TTS model initialized successfully")
+            if not torch.cuda.is_available():
+                error_msg = (
+                    "GPU (CUDA) is required but not available!\n\n"
+                    "This application requires GPU acceleration to run.\n"
+                    "Please ensure you have:\n"
+                    "1. An NVIDIA GPU\n"
+                    "2. NVIDIA GPU drivers installed\n"
+                    "3. CUDA Toolkit installed\n"
+                    "4. PyTorch with CUDA support installed\n\n"
+                    "To install PyTorch with CUDA support, visit:\n"
+                    "https://pytorch.org/get-started/locally/"
+                )
+                print(error_msg)
+                QMessageBox.critical(None, "GPU Required", error_msg)
+                sys.exit(1)
+            
+            print("CUDA is available, using GPU")
+            self.model = ChatterboxTTS.from_pretrained(device="cuda")
+            print("TTS model initialized successfully on GPU")
         except Exception as e:
             error_msg = f"Failed to initialize TTS model:\n{str(e)}\n\nTraceback:\n{traceback.format_exc()}"
             print(error_msg)
@@ -580,14 +585,14 @@ class ClipboardReader(QObject):
         sentences = re.split(r'(?<=[.!?])\s+', text)
         
         # For very short texts, return as single chunk for faster processing
-        if len(text) <= 50:
+        if len(text) <= 25:
             return [text]
             
         # For longer texts, split into smaller chunks
         chunks = []
         current_chunk = []
         current_length = 0
-        max_chunk_length = 50  # Reduced from 100 for faster initial response
+        max_chunk_length = 25  # Reduced from 30 for even faster initial response
         
         for sentence in sentences:
             sentence_length = len(sentence)
@@ -758,9 +763,16 @@ class ClipboardReader(QObject):
                 logger.error(f"Error getting voice prompt: {e}", exc_info=True)
                 voice_prompt = None
             
+            # Calculate total characters for progress estimation
+            total_chars = sum(len(chunk) for chunk in chunks)
+            chars_per_token = 0.15  # Approximate ratio
+            estimated_tokens = int(total_chars * chars_per_token)
+            logger.debug(f"Estimated tokens to generate: {estimated_tokens}")
+            
             try:
                 logger.debug("Creating new AudioGenerator and AudioPlayer")
                 self.generator = AudioGenerator(self.model, self.text_queue, voice_prompt)
+                self.generator.parent = self  # Add reference for progress updates
                 self.player = AudioPlayer(self.audio_queue, self.model.sr)
             except Exception as e:
                 logger.error(f"Error creating audio components: {e}", exc_info=True)
@@ -1017,6 +1029,28 @@ class ClipboardReader(QObject):
 if __name__ == '__main__':
     try:
         logger.info("=== Starting application ===")
+        
+        # Check for CUDA availability before starting
+        if not torch.cuda.is_available():
+            error_msg = (
+                "GPU (CUDA) is required but not available!\n\n"
+                "This application requires GPU acceleration to run.\n"
+                "Please ensure you have:\n"
+                "1. An NVIDIA GPU\n"
+                "2. NVIDIA GPU drivers installed\n"
+                "3. CUDA Toolkit installed\n"
+                "4. PyTorch with CUDA support installed\n\n"
+                "To install PyTorch with CUDA support, visit:\n"
+                "https://pytorch.org/get-started/locally/"
+            )
+            print(error_msg)
+            # Try to show error dialog before creating QApplication
+            app_temp = QApplication(sys.argv)
+            QMessageBox.critical(None, "GPU Required", error_msg)
+            sys.exit(1)
+        
+        logger.info(f"CUDA is available. GPU: {torch.cuda.get_device_name(0)}")
+        
         app = QApplication(sys.argv)
         
         try:
@@ -1033,7 +1067,7 @@ if __name__ == '__main__':
             # Prevent application from exiting
             app.setQuitOnLastWindowClosed(False)
             
-            logger.info("Entering application event loop")
+            logger.info("Application is ready!")
             result = app.exec_()
             logger.info(f"Application event loop exited with result: {result}")
             
