@@ -1,8 +1,12 @@
+
+![app_icon](https://github.com/user-attachments/assets/54f63aa6-4e20-46cd-b5c3-df36c66ac6b9)
+
 # ChatterbOx
+
 
 ## Description
 
-This is a tray utility that supports Chatterbox Text-to-Speech (TTS). It can automatically read aloud new text copied to the clipboard or read the current clipboard content on demand. It also allows saving the clipboard text as a WAV audio file.
+This is a tray utility that supports [Chatterbox TTS](https://github.com/resemble-ai/chatterbox). It can automatically read aloud new text copied to the clipboard or read the current clipboard content on demand. It also allows saving the clipboard text as a WAV audio file.
 
 ## Features
 
