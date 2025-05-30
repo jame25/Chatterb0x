@@ -713,18 +713,18 @@ class ClipboardReader(QObject):
                 
             if not text:
                 logger.warning("No text in clipboard")
-                QMessageBox.warning(None, "Warning", "No text found in clipboard. Please copy some text first.")
+                # Silently return without showing warning for empty clipboard
                 return
 
             # Ensure text is a string
             if not isinstance(text, str):
                 logger.warning(f"Invalid text type: {type(text)}")
-                QMessageBox.warning(None, "Warning", "Invalid clipboard content. Please copy some text first.")
+                # Silently return without showing warning
                 return
 
             if not text or not text.strip():
                 logger.warning("No text in clipboard or text is empty")
-                QMessageBox.warning(None, "Warning", "No text found in clipboard. Please copy some text first.")
+                # Silently return without showing warning for whitespace-only content
                 return
             
             logger.debug(f"Got text from clipboard: {text[:50]}...")
