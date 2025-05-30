@@ -1,0 +1,7 @@
+PyQt5
+pyperclip
+torch
+torchaudio
+pyaudio
+numpy
+chatterbox-tts 
