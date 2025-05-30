@@ -1,6 +1,6 @@
-# Contributing to Chatterbox TTS - UI
+# Contributing to Chatterb0x Clipboard Reader
 
-First off, thank you for considering contributing to the "Chatterbox TTS - UI" project! We appreciate any help, whether it's reporting a bug, suggesting a feature, or submitting code changes.
+First off, thank you for considering contributing to the "Chatterb0x Clipboard Reader" project! We appreciate any help, whether it's reporting a bug, suggesting a feature, or submitting code changes.
 
 This document provides some guidelines to help make the contribution process smooth and effective for everyone.
 
@@ -35,12 +35,12 @@ If you're looking to contribute code, here's a quick guide to setting up your de
 1.  **Prerequisites:** Ensure you have Python (3.11 recommended), `uv`, and FFmpeg installed as described in the main `README.md`.
 2.  **Fork & Clone:** Fork the repository on GitHub and then clone your fork locally:
     ```bash
-    git clone https://github.com/AcTePuKc/Chatterbox-TTS-UI.git
-    cd Chatterbox-TTS-UI
+    git clone https://github.com/jame25/Chatterb0x.git
+    cd Chatterb0x
     ```
 3.  **Set up Upstream Remote (Optional but Recommended):**
     ```bash
-    git remote add upstream https://github.com/AcTePuKc/Chatterbox-TTS-UI.git 
+    git remote add upstream https://github.com/jame25/Chatterb0x.git 
     ```
     This allows you to easily pull changes from the main repository.
 4.  **Create Virtual Environment & Install Dependencies:**
@@ -59,4 +59,4 @@ If you have questions about contributing or need clarification, feel free to ope
 
 ---
 
-Thank you for your interest in improving Chatterbox TTS - UI!
+Thank you for your interest in improving Chatterb0x Clipboard Reader!
