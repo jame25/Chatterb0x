@@ -16,6 +16,7 @@ A system tray utility that leverages [Chatterbox TTS](https://github.com/resembl
     *   Choose between different voice prompts (e.g., male, female).
     *   Option to use the model's default voice without a specific prompt.
     *   Attempts to auto-generate basic prompts if custom ones are not found.
+*   **Pronunciation Dictionary**: Replace words and phrases to suit your preference.
 *   **System Tray Integration**: Runs discreetly in the system tray with a context menu for easy access.
 *   **GPU Accelerated**: Utilizes CUDA-enabled GPUs for fast TTS generation.
 *   **Cross-Platform (Untested, GUI/Core Logic)**: Core Python logic is cross-platform. Setup scripts currently focus on Windows (`run.bat`) and Linux/macOS (`run.sh`).
