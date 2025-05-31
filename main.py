@@ -329,6 +329,7 @@ class ClipboardReader(QObject):
         self.p_audio_instance = None  # For PyAudio
         self._is_reading_active = False
         self._generation_complete_flag = False
+        self.pronunciation_dict = {}  # Store pronunciation dictionary
 
         self.text_processing_queue = queue.Queue(
             maxsize=100)  # For text chunks to generator
@@ -348,6 +349,7 @@ class ClipboardReader(QObject):
         self.thread_pool = QThreadPool.globalInstance()
 
         self._setup_ui()
+        self._load_pronunciation_dict()  # Load pronunciation dictionary
 
         if CHATTERBOX_AVAILABLE:
             try:
@@ -587,6 +589,49 @@ class ClipboardReader(QObject):
             return
         self.process_text_for_reading(text)
 
+    def _load_pronunciation_dict(self):
+        """Load pronunciation dictionary from file."""
+        dict_path = Path('pronunciation.dict')
+        if not dict_path.exists():
+            logger.info("No pronunciation dictionary found. Creating empty file.")
+            dict_path.touch()
+            return
+
+        try:
+            with open(dict_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    try:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        if key and value:
+                            self.pronunciation_dict[key] = value
+                    except ValueError:
+                        logger.warning(f"Invalid dictionary entry: {line}")
+            logger.info(f"Loaded {len(self.pronunciation_dict)} pronunciation entries")
+        except Exception as e:
+            logger.error(f"Error loading pronunciation dictionary: {e}")
+
+    def _apply_pronunciation_dict(self, text):
+        """Apply pronunciation dictionary replacements to text."""
+        if not self.pronunciation_dict:
+            return text
+
+        # Sort keys by length (longest first) to handle overlapping replacements
+        sorted_keys = sorted(self.pronunciation_dict.keys(), key=len, reverse=True)
+        
+        # Create a pattern that matches whole words only
+        pattern = r'\b(' + '|'.join(re.escape(k) for k in sorted_keys) + r')\b'
+        
+        def replace_func(match):
+            word = match.group(1)
+            return self.pronunciation_dict.get(word, word)
+
+        return re.sub(pattern, replace_func, text)
+
     def process_text_for_reading(self, text_to_read: str):
         if not self.model:
             QMessageBox.critical(None, "Error", "TTS Model not initialized.")
@@ -599,6 +644,9 @@ class ClipboardReader(QObject):
         if self._is_reading_active:
             logger.info("Reading active. Stopping current then starting new.")
             self.stop_reading(silent=True)
+
+        # Apply pronunciation dictionary replacements
+        text_to_read = self._apply_pronunciation_dict(text_to_read)
 
         self._is_reading_active = True
         self._generation_complete_flag = False
